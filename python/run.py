@@ -14,14 +14,14 @@ class UTIL_TETRIS_Input_t(ctypes.Structure):
 CSS_DISPLAY_WIDTH = 128
 CSS_DISPLAY_HEIGHT = 44
 
-CSS_DISPLAY_OFFSET_X = 286
-CSS_DISPLAY_OFFSET_Y = 68
+CSS_DISPLAY_OFFSET_X = 284
+CSS_DISPLAY_OFFSET_Y = 66
 
 SIMULATION_DISPLAY_WIDTH = 614
 SIMULATION_DISPLAY_HEIGHT = 244
 
 #DLL STUFF
-PATH_TO_DLL = "../c/b3/libtetris.dll"
+PATH_TO_DLL = "../c/build/libtetris.dll"
 niklas_dll = ctypes.CDLL(PATH_TO_DLL)
 niklas_dll.getImageBuffer.restype = ctypes.POINTER(ctypes.c_uint32)
 image_array = niklas_dll.getImageBuffer()
@@ -53,11 +53,13 @@ screen.show()
 running = True
 iter = 0
 buttons = UTIL_TETRIS_Input_t()
+display_mask = [CSS_DISPLAY_OFFSET_X, CSS_DISPLAY_OFFSET_X+CSS_DISPLAY_WIDTH*2, CSS_DISPLAY_OFFSET_Y, CSS_DISPLAY_OFFSET_Y+CSS_DISPLAY_HEIGHT*2]
+niklas_dll.init()
 while running:
     iter = iter + 1
     niklas_dll.update(ctypes.pointer(buttons))
     display_css_image(screen, image_array)
-    screen.show([CSS_DISPLAY_OFFSET_X, CSS_DISPLAY_OFFSET_X+144*2, CSS_DISPLAY_OFFSET_Y, CSS_DISPLAY_OFFSET_Y+44*2])
+    screen.show(mask=display_mask)
     time.sleep(0.01)
 
     events = pygame.event.get()
