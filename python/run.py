@@ -54,7 +54,7 @@ running = True
 iter = 0
 buttons = UTIL_TETRIS_Input_t()
 display_mask = [CSS_DISPLAY_OFFSET_X, CSS_DISPLAY_OFFSET_X+CSS_DISPLAY_WIDTH*2, CSS_DISPLAY_OFFSET_Y, CSS_DISPLAY_OFFSET_Y+CSS_DISPLAY_HEIGHT*2]
-niklas_dll.init()
+niklas_dll.UTIL_TETRIS_init(1222)
 while running:
     iter = iter + 1
     niklas_dll.update(ctypes.pointer(buttons))
