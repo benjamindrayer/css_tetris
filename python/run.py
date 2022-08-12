@@ -2,6 +2,7 @@
 from the_game.display import *
 import ctypes
 
+#Structure for the c-code to handle the input buttons
 class UTIL_TETRIS_Input_t(ctypes.Structure):
     _fields_ = [
         ("buttonLeft", ctypes.c_uint8),
@@ -9,40 +10,54 @@ class UTIL_TETRIS_Input_t(ctypes.Structure):
         ("buttonRight", ctypes.c_uint8),
     ]
 
-DISPLAY_WIDTH = 128
-DISPLAY_HEIGHT = 44
-PATH_TO_DLL = "C:/Development/css_tetris/c/b3/libtetris.dll"
+#Display configuration
+CSS_DISPLAY_WIDTH = 128
+CSS_DISPLAY_HEIGHT = 44
+
+CSS_DISPLAY_OFFSET_X = 286
+CSS_DISPLAY_OFFSET_Y = 68
+
+SIMULATION_DISPLAY_WIDTH = 614
+SIMULATION_DISPLAY_HEIGHT = 244
+
+#DLL STUFF
+PATH_TO_DLL = "../c/b3/libtetris.dll"
 niklas_dll = ctypes.CDLL(PATH_TO_DLL)
-niklas_dll.main()
 niklas_dll.getImageBuffer.restype = ctypes.POINTER(ctypes.c_uint32)
 image_array = niklas_dll.getImageBuffer()
 
-def display_image(screen, image):
-    for x in range(DISPLAY_WIDTH):
-        for y in range(DISPLAY_HEIGHT):
-            color = image_array[y*DISPLAY_WIDTH+x]
+def display_css_image(screen, css_image):
+    for x in range(CSS_DISPLAY_WIDTH):
+        for y in range(CSS_DISPLAY_HEIGHT):
+            color = css_image[y*CSS_DISPLAY_WIDTH+x]
             r = color & 255
             g = (color>>8)&255
             b = (color>>16)&255
-            screen.set_pixel(x, y, [r, g, b])
+            screen.set_pixel(CSS_DISPLAY_OFFSET_X + 2*x, CSS_DISPLAY_OFFSET_Y + 2*y, [r, g, b])
+            screen.set_pixel(CSS_DISPLAY_OFFSET_X + 2*x, CSS_DISPLAY_OFFSET_Y + 2*y+1, [r, g, b])
+            screen.set_pixel(CSS_DISPLAY_OFFSET_X + 2*x+1, CSS_DISPLAY_OFFSET_Y + 2*y, [r, g, b])
+            screen.set_pixel(CSS_DISPLAY_OFFSET_X + 2*x+1, CSS_DISPLAY_OFFSET_Y + 2*y+1, [r, g, b])
 
 
-screen = Display(DISPLAY_WIDTH, DISPLAY_HEIGHT)
+screen = Display(SIMULATION_DISPLAY_WIDTH, SIMULATION_DISPLAY_HEIGHT, factor=1)
 
+image = pygame.image.load('images/sensor_2.png')
 
 pygame.init()
 #input_control = InputControl(input_type=INPUT_TYPE_BOTH)
 pygame.display.set_caption('Niklas')
 screen.show()
-show_arrows = True
+screen.showImage(image)
+screen.show()
+
 running = True
 iter = 0
 buttons = UTIL_TETRIS_Input_t()
 while running:
     iter = iter + 1
     niklas_dll.update(ctypes.pointer(buttons))
-    display_image(screen, image_array)
-    screen.show()
+    display_css_image(screen, image_array)
+    screen.show([CSS_DISPLAY_OFFSET_X, CSS_DISPLAY_OFFSET_X+144*2, CSS_DISPLAY_OFFSET_Y, CSS_DISPLAY_OFFSET_Y+44*2])
     time.sleep(0.01)
 
     events = pygame.event.get()

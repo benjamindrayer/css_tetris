@@ -63,9 +63,9 @@ static uint32_t counterColor = 0;
 
 uint32_t update(const UTIL_TETRIS_Input_t* const pButtons)
 {
-	GUI_SetBkColor(0x00008000);
+	GUI_SetBkColor(0x00000000);
 	GUI_Clear();
-	GUI_SetColor(0x00FF0000);
+	GUI_SetColor(0x000000FF);
 	if(pButtons->buttonLeft==1)
 	{
      	counterX--;
@@ -81,6 +81,9 @@ uint32_t update(const UTIL_TETRIS_Input_t* const pButtons)
 	uint32_t y = counterY%SCREEN_HEIGHT;
 	uint32_t x = counterX%SCREEN_WIDTH;
 	GUI_DrawPixel(x, y);
+	GUI_DrawPixel(x+1, y);
+	GUI_DrawPixel(x, y+1);
+	GUI_DrawPixel(x+1, y+1);
 }
 
 int main() {

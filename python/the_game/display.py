@@ -10,7 +10,7 @@ class Display:
     """Display class
     """
 
-    def __init__(self, size_x, size_y):
+    def __init__(self, size_x, size_y, factor=8):
         """
         Initializes display of size x,y
         :param size_x:
@@ -22,7 +22,7 @@ class Display:
         self.image = np.zeros((size_x, size_y, 3))
         self.size_x = size_x
         self.size_y = size_y
-        self.factor = 8
+        self.factor = factor
         pygame.init()
         self.scr = pygame.display.set_mode((self.size_x * self.factor, self.size_y * self.factor))
         self.scr.fill((0, 0, 0))
@@ -64,14 +64,31 @@ class Display:
             time.sleep(0.2)
 
 
-    def show(self):
+    def show(self, mask=[]):
         """Show the current image
         :return:
         """
+        if mask:
+            for x in range(mask[0], mask[1]):
+                for y in range(mask[2], mask[3]):
+                    color = (self.image[x, y, 0], self.image[x, y, 1], self.image[x, y, 2])
+                    #                pygame.draw.circle(self.scr, color, ((x + 0.5) * self.factor, (y + 0.5) * self.factor),
+                    #                                   self.factor / 2 - 1)
+                    pygame.draw.rect(self.scr, color,
+                                     pygame.Rect(x * self.factor, y * self.factor, self.factor, self.factor))
+        else:
+            for x in range(self.size_x):
+                for y in range(self.size_y):
+                    color = (self.image[x, y, 0], self.image[x, y, 1], self.image[x, y, 2])
+    #                pygame.draw.circle(self.scr, color, ((x + 0.5) * self.factor, (y + 0.5) * self.factor),
+    #                                   self.factor / 2 - 1)
+                    pygame.draw.rect(self.scr, color, pygame.Rect(x*self.factor, y*self.factor, self.factor, self.factor) )
+        pygame.display.update()
+
+    def showImage(self, image):
         for x in range(self.size_x):
             for y in range(self.size_y):
-                color = (self.image[x, y, 0], self.image[x, y, 1], self.image[x, y, 2])
-#                pygame.draw.circle(self.scr, color, ((x + 0.5) * self.factor, (y + 0.5) * self.factor),
-#                                   self.factor / 2 - 1)
-                pygame.draw.rect(self.scr, color, pygame.Rect(x* self.factor, y* self.factor, self.factor, self.factor) )
-            pygame.display.update()
+                self.image[x,y,0] = image.get_at((x,y)).r
+                self.image[x,y,1] = image.get_at((x,y)).g
+                self.image[x,y,2] = image.get_at((x,y)).b
+#        pygame.display.update()
