@@ -45,7 +45,7 @@ image = pygame.image.load('images/sensor_2.png')
 
 pygame.init()
 #input_control = InputControl(input_type=INPUT_TYPE_BOTH)
-pygame.display.set_caption('Niklas')
+pygame.display.set_caption('CSS-Tetris')
 screen.show()
 screen.showImage(image)
 screen.show()
