@@ -41,6 +41,7 @@ const int8_t aOffsets[N_ROCKS][4][8] = {{{0,0,-1, 1, 0, 1, 1, 1}, {0,0, 1, 1, 1,
                                         {{0, 0, 0, 1, 1, 1, 1, 2}, {0, 1, 1, 1, 0, 2, -1, 2}, {1, 2, 1, 1, 0, 1, 0, 0}, {-1, 2, 0, 2, 1, 1, 0, 1}},             //Sierra
                                         {{0, 0, 0, 1, -1, 1, -1, 2}, {0, 1, -1, 1, 0, 2, 1, 2}, {-1, 2, -1, 1, 0, 1, 0, 0}, {1, 2, 0, 2, -1, 1, 0, 1}}};        //Zulu
 
+const uint32_t aScores[] = {0, 40, 100, 300, 1200}; //Original scoring
 
 // Structure for the input of the game
 typedef struct
@@ -53,8 +54,9 @@ typedef struct
 // Structure for the output of the game
 typedef struct
 {
-    int32_t level;
     uint32_t musicCommand;
+    int32_t level;
+    uint32_t score;
     uint32_t debugState;
 }UTIL_TETRIS_Output_t;
 
@@ -89,6 +91,7 @@ static struct
     UTIL_TETRIS_Rock_t block;
     UTIL_TETRIS_Rock_t blockNext;
     int32_t level;
+    uint32_t nLines;
     uint32_t score;
 } m;
 
@@ -402,6 +405,50 @@ static void showPreview(const UTIL_TETRIS_Rock_t* const pRock,
         draw3by3(xTemp, yTemp);
     }
 }
+
+static void eraseLine(UTIL_TETRIS_Board_t* pBoard,
+                      const uint32_t line)
+{
+    for(uint32_t y=0;y<BOARD_HEIGHT;y++)
+    {
+        for(uint32_t x=line;x<BOARD_WIDTH-1;x++)
+        {
+            pBoard->aData[y*BOARD_WIDTH+x] = pBoard->aData[y*BOARD_WIDTH+x+1];
+        }
+    }
+    for(uint32_t y=0;y<BOARD_HEIGHT;y++)
+    {
+        pBoard->aData[y*BOARD_WIDTH+BOARD_WIDTH-1] = 0;
+    }
+}
+
+static bool checkLineComplete(UTIL_TETRIS_Board_t* pBoard,
+                              const uint32_t line)
+{
+    for(uint32_t y=0;y<BOARD_HEIGHT;y++)
+    {
+        if(pBoard->aData[y*BOARD_WIDTH+line] == 0)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+static uint32_t evaluateBoard(UTIL_TETRIS_Board_t* pBoard)
+{
+    uint32_t nLines = 0Lu;
+    for(int32_t x = BOARD_WIDTH-1; x>=0;x--)
+    {
+        if(checkLineComplete(pBoard, x))
+        {
+            eraseLine(pBoard, x);
+            nLines++;
+        }
+    }
+    return nLines;
+}
+
 static uint32_t counter = 0;
 
 /**
@@ -414,9 +461,12 @@ extern void UTIL_TETRIS_init(const uint16_t seed)
     //Init Game board
     initBoard(&m.board);
     m.level = 0;
+    m.nLines = 0;
+    m.score = 0;
     showBoard(&m.board, m.level);
     showPreview(&m.blockNext, m.level);
 }
+#define LINES_PER_LEVEL 2
 
 extern uint32_t UTIL_TETRIS_update(const UTIL_TETRIS_Input_t* const pButtons,
                                    UTIL_TETRIS_Output_t* pOutput)
@@ -436,16 +486,23 @@ extern uint32_t UTIL_TETRIS_update(const UTIL_TETRIS_Input_t* const pButtons,
         rotateBlock(&m.block, &m.board);
     }
     pOutput->debugState |= 1;
-    if(counter%2 == 0)
+    if(counter%4 == 0)
     {
         bool movementOk = moveBlock(&m.block, &m.board, DIRECTION_LEFT);
         //If we cannot move the block anymore it has landed
         if(!movementOk)
         {
             //1. Check line completeness and do stuff
+            uint32_t nLines = evaluateBoard(&m.board);
+            m.nLines += nLines;
+            m.score += aScores[nLines]*(m.level+1);
+            pOutput->score = m.score;
+            if(nLines>0 && m.nLines%LINES_PER_LEVEL==0)
+            {
+                m.level++;
+            }
             //2. Check game over
             pOutput->debugState |= 2;
-            printf("BLOCK lANDED\n");
             m.block = m.blockNext;  //Current Block is next block
             getNextBlock(&m.blockNext);
             showPreview(&m.blockNext, m.level);

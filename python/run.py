@@ -14,6 +14,8 @@ class UTIL_TETRIS_Input_t(ctypes.Structure):
 class UTIL_TETRIS_Output_t(ctypes.Structure):
     _fields_ = [
         ("musicCommand", ctypes.c_uint32),
+        ("level", ctypes.c_uint32),
+        ("score", ctypes.c_uint32),
         ("debugState", ctypes.c_uint32),
     ]
 
@@ -66,7 +68,7 @@ niklas_dll.UTIL_TETRIS_init(1222)
 while running:
     iter = iter + 1
     niklas_dll.UTIL_TETRIS_update(ctypes.pointer(buttons), ctypes.pointer(output))
-    print(iter, output.debugState)
+    print(iter, output.debugState, output.score)
     display_css_image(screen, image_array)
     screen.show(mask=display_mask)
     time.sleep(0.01)
