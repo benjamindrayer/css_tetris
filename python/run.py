@@ -8,6 +8,7 @@ class UTIL_TETRIS_Input_t(ctypes.Structure):
         ("buttonLeft", ctypes.c_uint8),
         ("buttonCenter", ctypes.c_uint8),
         ("buttonRight", ctypes.c_uint8),
+        ("buttonDebug", ctypes.c_uint8),
     ]
 
 #Structure for the c-code to handle the output
@@ -77,11 +78,14 @@ while running:
     buttons.buttonLeft = 0
     buttons.buttonCenter = 0
     buttons.buttonRight = 0
+    buttons.buttonDebug = 0
     for event in events:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
                 buttons.buttonLeft = 1
             if event.key == pygame.K_RIGHT:
                 buttons.buttonRight = 1
-            if event.key == pygame.K_DOWN:
+            if event.key == pygame.K_UP:
                 buttons.buttonCenter = 1
+            if event.key == pygame.K_DOWN:
+                buttons.buttonDebug = 1

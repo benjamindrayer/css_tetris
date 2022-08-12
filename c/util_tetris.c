@@ -49,6 +49,7 @@ typedef struct
     uint8_t buttonLeft;
     uint8_t buttonCenter;
     uint8_t buttonRight;
+    uint8_t buttonDebug;
 }UTIL_TETRIS_Input_t;
 
 // Structure for the output of the game
@@ -480,6 +481,10 @@ extern uint32_t UTIL_TETRIS_update(const UTIL_TETRIS_Input_t* const pButtons,
     if(pButtons->buttonRight==1)
     {
         moveBlock(&m.block, &m.board, DIRECTION_DOWN);
+    }
+    if(pButtons->buttonDebug==1)
+    {
+        moveBlock(&m.block, &m.board, DIRECTION_LEFT);
     }
     if(pButtons->buttonCenter==1)
     {
