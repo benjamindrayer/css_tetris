@@ -10,6 +10,13 @@ class UTIL_TETRIS_Input_t(ctypes.Structure):
         ("buttonRight", ctypes.c_uint8),
     ]
 
+#Structure for the c-code to handle the output
+class UTIL_TETRIS_Output_t(ctypes.Structure):
+    _fields_ = [
+        ("musicCommand", ctypes.c_uint32),
+        ("debugState", ctypes.c_uint32),
+    ]
+
 #Display configuration
 CSS_DISPLAY_WIDTH = 128
 CSS_DISPLAY_HEIGHT = 44
@@ -53,11 +60,13 @@ screen.show()
 running = True
 iter = 0
 buttons = UTIL_TETRIS_Input_t()
+output = UTIL_TETRIS_Output_t()
 display_mask = [CSS_DISPLAY_OFFSET_X, CSS_DISPLAY_OFFSET_X+CSS_DISPLAY_WIDTH*2, CSS_DISPLAY_OFFSET_Y, CSS_DISPLAY_OFFSET_Y+CSS_DISPLAY_HEIGHT*2]
 niklas_dll.UTIL_TETRIS_init(1222)
 while running:
     iter = iter + 1
-    niklas_dll.update(ctypes.pointer(buttons))
+    niklas_dll.UTIL_TETRIS_update(ctypes.pointer(buttons), ctypes.pointer(output))
+    print(iter, output.debugState)
     display_css_image(screen, image_array)
     screen.show(mask=display_mask)
     time.sleep(0.01)
@@ -74,4 +83,3 @@ while running:
                 buttons.buttonRight = 1
             if event.key == pygame.K_DOWN:
                 buttons.buttonCenter = 1
-    print(iter)

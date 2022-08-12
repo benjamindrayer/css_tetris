@@ -44,6 +44,13 @@ typedef struct
     uint8_t buttonRight;
 }UTIL_TETRIS_Input_t;
 
+// Structure for the output of the game
+typedef struct
+{
+    uint32_t musicCommand;
+    uint32_t debugState;
+}UTIL_TETRIS_Output_t;
+
 #define BOARD_HEIGHT             10
 #define BOARD_WIDTH_VISIBLE      20
 #define BOARD_WIDTH              24
@@ -57,7 +64,7 @@ typedef struct
     uint32_t width;
     uint32_t height;
     uint8_t aData[BOARD_WIDTH*BOARD_HEIGHT]
-} UTIL_TETRIS_Board_t;
+}UTIL_TETRIS_Board_t;
 
 //structure for a block/rock
 typedef struct
@@ -73,6 +80,7 @@ static struct
 {
     UTIL_TETRIS_Board_t board;
     UTIL_TETRIS_Rock_t block;
+    UTIL_TETRIS_Rock_t blockNext;
 } m;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -123,15 +131,21 @@ uint32_t* getImageBuffer()
 
 #endif
 
-//TODO: defines for x and y init
+static uint16_t lfsr = 0xACE1u;
+extern uint16_t randomgen()
+{
+    uint16_t bit  = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5) ) & 1;
+    return lfsr =  (lfsr >> 1) | (bit << 15);
+}
+
 //TODO: random selection of block type
 static void getNextBlock(UTIL_TETRIS_Rock_t* pRock)
 {
     pRock->rotation = 0;
     pRock->rotationGoal = 0;
-    pRock->y = 5;
+    pRock->y = BOARD_HEIGHT>>1;
     pRock->x = BOARD_WIDTH_VISIBLE;
-    pRock->type = rand() % N_ROCKS;
+    pRock->type = (randomgen() % N_ROCKS);
 }
 
 #define DIRECTION_LEFT 0
@@ -195,8 +209,44 @@ static bool moveBlock(UTIL_TETRIS_Rock_t* pRock,
     {
         int8_t xTemp = pRock->x + aOffsets[pRock->type][pRock->rotation][i*2+0];
         int8_t yTemp = pRock->y + aOffsets[pRock->type][pRock->rotation][i*2+1];
-        pBoard->aData[yTemp*BOARD_WIDTH+xTemp] = pRock->type;
+        pBoard->aData[yTemp*BOARD_WIDTH+xTemp] = pRock->type + 1;
     }
+    return ok;
+}
+
+static bool placeBlock(UTIL_TETRIS_Rock_t* pRock,
+                       UTIL_TETRIS_Board_t* pBoard)
+{
+    bool ok = true;
+    for(uint32_t i=0Lu;i<4;i++)
+    {
+        int8_t xTemp = pRock->x + aOffsets[pRock->type][pRock->rotation][i*2+0];
+        int8_t yTemp = pRock->y + aOffsets[pRock->type][pRock->rotation][i*2+1];
+        if(xTemp>=0 && xTemp<BOARD_WIDTH && yTemp>=0 && yTemp<BOARD_HEIGHT)
+        {
+            if(pBoard->aData[yTemp*BOARD_WIDTH+xTemp] > 0)
+            {
+                ok = false;
+                break;
+            }
+        }
+        else
+        {
+            ok = false;
+            break;
+        }
+    }
+    if(ok)
+    {
+        //Place block
+        for(uint32_t i=0Lu;i<4;i++)
+        {
+            int8_t xTemp = pRock->x + aOffsets[pRock->type][pRock->rotation][i*2+0];
+            int8_t yTemp = pRock->y + aOffsets[pRock->type][pRock->rotation][i*2+1];
+            pBoard->aData[yTemp*BOARD_WIDTH+xTemp] = pRock->type + 1;
+        }
+    }
+    return ok;
 }
 
 static bool rotateBlock(UTIL_TETRIS_Rock_t* pRock,
@@ -215,8 +265,8 @@ static bool rotateBlock(UTIL_TETRIS_Rock_t* pRock,
     bool ok = true;
     for(uint32_t i=0Lu;i<4;i++)
     {
-        int8_t xTemp = pRock->x + aOffsets[pRock->type][pRock->rotation][i*2+0];
-        int8_t yTemp = pRock->y + aOffsets[pRock->type][pRock->rotation][i*2+1];
+        int8_t xTemp = pRock->x + aOffsets[pRock->type][pRock->rotationGoal][i*2+0];
+        int8_t yTemp = pRock->y + aOffsets[pRock->type][pRock->rotationGoal][i*2+1];
         if(xTemp>=0 && xTemp<BOARD_WIDTH && yTemp>=0 && yTemp<BOARD_HEIGHT)
         {
             if(pBoard->aData[yTemp*BOARD_WIDTH+xTemp] > 0)
@@ -257,6 +307,7 @@ static void initBoard(UTIL_TETRIS_Board_t* pBoard)
         pBoard->aData[i] = 0;
     }
     getNextBlock(&(m.block));
+    getNextBlock(&(m.blockNext));
 }
 
 static void showBoard(UTIL_TETRIS_Board_t* pBoard, uint32_t level)
@@ -293,23 +344,23 @@ static void showBoard(UTIL_TETRIS_Board_t* pBoard, uint32_t level)
     }
 }
 
-static uint32_t counterX = 0;
-static uint32_t counterY = 0;
-static uint32_t counterColor = 0;
+static uint32_t counter = 0;
 
 /**
  * \brief Initializes the module
  * \param[in] seed: Seed for the random number generation
  */
-extern void UTIL_TETRIS_init(const uint32_t seed)
+extern void UTIL_TETRIS_init(const uint16_t seed)
 {
-    srand(seed);
+    lfsr = seed;
     //Init Game board
     initBoard(&m.board);
 }
 
-uint32_t update(const UTIL_TETRIS_Input_t* const pButtons)
+extern uint32_t UTIL_TETRIS_update(const UTIL_TETRIS_Input_t* const pButtons,
+                                   UTIL_TETRIS_Output_t* pOutput)
 {
+    counter++;
     showBoard(&m.board, 0);
     if(pButtons->buttonLeft==1)
     {
@@ -321,7 +372,30 @@ uint32_t update(const UTIL_TETRIS_Input_t* const pButtons)
     }
     if(pButtons->buttonCenter==1)
     {
-//        rotateBlock(&m.block, &m.board);
+        rotateBlock(&m.block, &m.board);
+    }
+    pOutput->debugState |= 1;
+    if(counter%2 == 0)
+    {
+        bool movementOk = moveBlock(&m.block, &m.board, DIRECTION_LEFT);
+        //If we cannot move the block anymore it has landed
+        if(!movementOk)
+        {
+            //1. Check line completeness and do stuff
+            //2. Check game over
+            pOutput->debugState |= 2;
+            printf("BLOCK lANDED\n");
+            m.block = m.blockNext;  //Current Block is next block
+            getNextBlock(&m.blockNext);
+            //Try to put it on the board
+            bool newBlockOk = placeBlock(&m.block, &m.board);
+            if(!newBlockOk)
+            {
+                pOutput->debugState |= 4;
+                //
+                printf("GAME OVER\n");
+            }
+        }
     }
 }
 
