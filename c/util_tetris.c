@@ -53,6 +53,7 @@ typedef struct
 // Structure for the output of the game
 typedef struct
 {
+    int32_t level;
     uint32_t musicCommand;
     uint32_t debugState;
 }UTIL_TETRIS_Output_t;
@@ -87,6 +88,8 @@ static struct
     UTIL_TETRIS_Board_t board;
     UTIL_TETRIS_Rock_t block;
     UTIL_TETRIS_Rock_t blockNext;
+    int32_t level;
+    uint32_t score;
 } m;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -316,40 +319,89 @@ static void initBoard(UTIL_TETRIS_Board_t* pBoard)
     getNextBlock(&(m.blockNext));
 }
 
+static void draw4by4(int x, int y)
+{
+    GUI_DrawPixel(x  , y);
+    GUI_DrawPixel(x+1, y);
+    GUI_DrawPixel(x  , y+1);
+    GUI_DrawPixel(x+1, y+1);
+
+    GUI_DrawPixel(x  , y+1);
+    GUI_DrawPixel(x+1, y+1);
+    GUI_DrawPixel(x  , y+2);
+    GUI_DrawPixel(x+1, y+2);
+
+    GUI_DrawPixel(x+1  , y);
+    GUI_DrawPixel(x+2, y);
+    GUI_DrawPixel(x+1  , y+1);
+    GUI_DrawPixel(x+2, y+1);
+
+    GUI_DrawPixel(x+1  , y+1);
+    GUI_DrawPixel(x+2, y+1);
+    GUI_DrawPixel(x+1  , y+2);
+    GUI_DrawPixel(x+2, y+2);
+}
+
+static void draw3by3(int x, int y)
+{
+    GUI_DrawPixel(x  , y);
+    GUI_DrawPixel(x+1, y);
+    GUI_DrawPixel(x  , y+1);
+    GUI_DrawPixel(x+1, y+1);
+
+//    GUI_DrawPixel(x  , y);
+//    GUI_DrawPixel(x+1, y);
+//    GUI_DrawPixel(x+2, y);
+//
+//    GUI_DrawPixel(x  , y+1);
+//    GUI_DrawPixel(x+1, y+1);
+//    GUI_DrawPixel(x+2, y+1);
+//
+//    GUI_DrawPixel(x  , y+2);
+//    GUI_DrawPixel(x+1, y+2);
+//    GUI_DrawPixel(x+2, y+2);
+}
+
 static void showBoard(UTIL_TETRIS_Board_t* pBoard, uint32_t level)
 {
     for(uint32_t y=0;y<BOARD_HEIGHT;y++)
     {
-        for(uint32_t x=0;x<BOARD_WIDTH;x++)
+        for(uint32_t x=0;x<BOARD_WIDTH_VISIBLE;x++)
         {
             GUI_SetColor(aColorMap[level][pBoard->aData[y*BOARD_WIDTH+x]]);
             uint32_t xTemp = BOARD_ANCHOR_X + (4*x);
             uint32_t yTemp = BOARD_ANCHOR_Y + (4*y);
 
-            GUI_DrawPixel(xTemp  , yTemp);
-            GUI_DrawPixel(xTemp+1, yTemp);
-            GUI_DrawPixel(xTemp  , yTemp+1);
-            GUI_DrawPixel(xTemp+1, yTemp+1);
-
-            GUI_DrawPixel(xTemp  , yTemp+1);
-            GUI_DrawPixel(xTemp+1, yTemp+1);
-            GUI_DrawPixel(xTemp  , yTemp+2);
-            GUI_DrawPixel(xTemp+1, yTemp+2);
-
-            GUI_DrawPixel(xTemp+1  , yTemp);
-            GUI_DrawPixel(xTemp+2, yTemp);
-            GUI_DrawPixel(xTemp+1  , yTemp+1);
-            GUI_DrawPixel(xTemp+2, yTemp+1);
-
-            GUI_DrawPixel(xTemp+1  , yTemp+1);
-            GUI_DrawPixel(xTemp+2, yTemp+1);
-            GUI_DrawPixel(xTemp+1  , yTemp+2);
-            GUI_DrawPixel(xTemp+2, yTemp+2);
-
+            draw4by4(xTemp, yTemp);
         }
     }
 }
+#define PREVIEW_ANCHOR_X 88
+#define PREVIEW_ANCHOR_Y 2
 
+static void showPreview(const UTIL_TETRIS_Rock_t* const pRock,
+                        const uint32_t level)
+{
+    //CLR
+    for(uint32_t x=0Lu;x<4;x++)
+    {
+        for(uint32_t y=0Lu;y<4;y++)
+        {
+            GUI_SetColor(aColorMap[level][0]);
+            int8_t xTemp = PREVIEW_ANCHOR_X + x*3;
+            int8_t yTemp = PREVIEW_ANCHOR_Y + y*3;
+            draw3by3(xTemp, yTemp);
+        }
+    }
+    //PLot Stone
+    for(uint32_t i=0Lu;i<4;i++)
+    {
+        int8_t xTemp = PREVIEW_ANCHOR_X + (aOffsets[pRock->type][pRock->rotation][i*2+0]+1) * 3;
+        int8_t yTemp = PREVIEW_ANCHOR_Y + (aOffsets[pRock->type][pRock->rotation][i*2+1]+1) * 3;
+        GUI_SetColor(aColorMap[level][pRock->type+1]);
+        draw3by3(xTemp, yTemp);
+    }
+}
 static uint32_t counter = 0;
 
 /**
@@ -361,13 +413,16 @@ extern void UTIL_TETRIS_init(const uint16_t seed)
     lfsr = seed;
     //Init Game board
     initBoard(&m.board);
+    m.level = 0;
+    showBoard(&m.board, m.level);
+    showPreview(&m.blockNext, m.level);
 }
 
 extern uint32_t UTIL_TETRIS_update(const UTIL_TETRIS_Input_t* const pButtons,
                                    UTIL_TETRIS_Output_t* pOutput)
 {
     counter++;
-    showBoard(&m.board, 0);
+    showBoard(&m.board, m.level);
     if(pButtons->buttonLeft==1)
     {
         moveBlock(&m.block, &m.board, DIRECTION_UP);
@@ -393,13 +448,12 @@ extern uint32_t UTIL_TETRIS_update(const UTIL_TETRIS_Input_t* const pButtons,
             printf("BLOCK lANDED\n");
             m.block = m.blockNext;  //Current Block is next block
             getNextBlock(&m.blockNext);
+            showPreview(&m.blockNext, m.level);
             //Try to put it on the board
             bool newBlockOk = placeBlock(&m.block, &m.board);
             if(!newBlockOk)
             {
-                pOutput->debugState |= 4;
-                //
-                printf("GAME OVER\n");
+                pOutput->level = -1;
             }
         }
     }
