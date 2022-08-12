@@ -1,12 +1,22 @@
 #include<stdio.h>
 #include<stdint.h>
+#define SIMULATION
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 44
 #define SCREEN_BYTES_PER_PIXEL 4
 #define SCREEN_SIZE_IN_BYTES SCREEN_WIDTH * SCREEN_HEIGHT * SCREEN_BYTES_PER_PIXEL
 
-#define SIMULATION
+#define BUTTON_STATE_OFF 0
+#define BUTTON_STATE_ON  1
+
+// Structure for the input of the game
+typedef struct
+{
+	uint8_t buttonLeft;			
+	uint8_t buttonCenter;			
+	uint8_t buttonRight;			
+}UTIL_TETRIS_Input_t;
 
 #ifdef SIMULATION
 static struct
@@ -16,7 +26,6 @@ static struct
 	uint32_t bkColor;
 } m;
 
-static int counter = 0;
 
 static void GUI_DrawPixel(int x, int y)
 {
@@ -48,13 +57,29 @@ uint32_t* getImageBuffer()
 
 #endif
 
-uint32_t update(uint8_t* pData)
+static int counterX = 0;
+static int counterY = 0;
+static int counterColor = 0;
+
+uint32_t update(const UTIL_TETRIS_Input_t* const pButtons)
 {
-	GUI_SetBkColor(0);
+	GUI_SetBkColor(0x00001000);
+	GUI_Clear();
 	GUI_SetColor(0x00FF0000);
-	counter++;
-	int y = 10;
-	int x = counter%SCREEN_WIDTH;
+	if(pButtons->buttonLeft==1)
+	{
+     	counterX--;
+	}
+	if(pButtons->buttonRight==1)
+	{
+     	counterX++;
+	}
+	if(pButtons->buttonCenter==1)
+	{
+     	counterY++;
+	}
+	int y = counterY%SCREEN_HEIGHT;
+	int x = counterX%SCREEN_WIDTH;
 	GUI_DrawPixel(x, y);
 }
 

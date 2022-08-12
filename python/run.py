@@ -2,6 +2,13 @@
 from the_game.display import *
 import ctypes
 
+class UTIL_TETRIS_Input_t(ctypes.Structure):
+    _fields_ = [
+        ("buttonLeft", ctypes.c_uint8),
+        ("buttonCenter", ctypes.c_uint8),
+        ("buttonRight", ctypes.c_uint8),
+    ]
+
 DISPLAY_WIDTH = 128
 DISPLAY_HEIGHT = 44
 PATH_TO_DLL = "C:/Development/css_tetris/c/b3/libtetris.dll"
@@ -30,11 +37,24 @@ screen.show()
 show_arrows = True
 running = True
 iter = 0
+buttons = UTIL_TETRIS_Input_t()
 while running:
     iter = iter + 1
-    niklas_dll.update()
+    niklas_dll.update(ctypes.pointer(buttons))
     display_image(screen, image_array)
     screen.show()
     time.sleep(0.01)
+
     events = pygame.event.get()
+    buttons.buttonLeft = 0
+    buttons.buttonCenter = 0
+    buttons.buttonRight = 0
+    for event in events:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                buttons.buttonLeft = 1
+            if event.key == pygame.K_RIGHT:
+                buttons.buttonRight = 1
+            if event.key == pygame.K_DOWN:
+                buttons.buttonCenter = 1
     print(iter)
