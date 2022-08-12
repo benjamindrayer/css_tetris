@@ -365,7 +365,55 @@ static void draw3by3(int x, int y)
 //    GUI_DrawPixel(x+1, y+2);
 //    GUI_DrawPixel(x+2, y+2);
 }
+const uint8_t aNumbers[10][5] = {{0b11111000, 0b10011000, 0b10101000, 0b11001000, 0b11111000},    //0
+                                 {0b00100000, 0b01100000, 0b00100000, 0b00100000, 0b01110000},    //1
+                                 {0b11110000, 0b00001000, 0b01110000, 0b10000000, 0b11111000},    //2
+                                 {0b11111000, 0b00001000, 0b01110000, 0b00001000, 0b11111000},    //3
+                                 {0b10000000, 0b10000000, 0b10100000, 0b11111000, 0b00100000},    //4
+                                 {0b11111000, 0b10000000, 0b11110000, 0b00001000, 0b11110000},    //5
+                                 {0b11111000, 0b10000000, 0b11111000, 0b10001000, 0b11111000},    //6
+                                 {0b11111000, 0b00001000, 0b00010000, 0b00100000, 0b00100000},    //7
+                                 {0b11111000, 0b10001000, 0b11111000, 0b10001000, 0b11111000},    //8
+                                 {0b11111000, 0b10001000, 0b11111000, 0b00001000, 0b11111000}};   //9
 
+static void printSingleNumberAt(int x, int y, uint32_t number)
+{
+    GUI_SetColor(0);
+    for(uint32_t line=0Lu;line<5;line++)
+    {
+        for(uint32_t col=0Lu;col<5;col++)
+        {
+            GUI_DrawPixel(x+col, y+line);
+
+        }
+    }
+    GUI_SetColor(0xFFFFFFFF);
+    for(uint32_t line=0Lu;line<5;line++)
+    {
+        for(uint32_t col=0Lu;col<5;col++)
+        {
+            if(aNumbers[number][line]>>(7-col) & 1 == 1)
+            {
+                GUI_DrawPixel(x+col, y+line);
+            }
+        }
+    }
+}
+
+static void printNumberAt(int x, int y, uint32_t number)
+{
+    uint32_t n=number;
+    for(uint32_t i=0Lu;i<7;i++)
+    {
+        uint32_t remainder = n % 10;
+        printSingleNumberAt(x+(6-i)*6, y, remainder);
+        n = n / 10;
+        if(n==0)
+        {
+            break;
+        }
+    }
+}
 static void showBoard(UTIL_TETRIS_Board_t* pBoard, uint32_t level)
 {
     for(uint32_t y=0;y<BOARD_HEIGHT;y++)
@@ -466,6 +514,7 @@ extern void UTIL_TETRIS_init(const uint16_t seed)
     m.score = 0;
     showBoard(&m.board, m.level);
     showPreview(&m.blockNext, m.level);
+    printNumberAt(85, 35, m.score);
 }
 #define LINES_PER_LEVEL 2
 
@@ -501,8 +550,9 @@ extern uint32_t UTIL_TETRIS_update(const UTIL_TETRIS_Input_t* const pButtons,
             uint32_t nLines = evaluateBoard(&m.board);
             m.nLines += nLines;
             m.score += aScores[nLines]*(m.level+1);
+            printNumberAt(85, 35, m.score);
             pOutput->score = m.score;
-            if(nLines>0 && m.nLines%LINES_PER_LEVEL==0)
+            if(m.nLines>(m.level+1)*LINES_PER_LEVEL)
             {
                 m.level++;
             }
