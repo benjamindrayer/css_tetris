@@ -4,19 +4,17 @@
 
 #include "util_tetris.h"
 
-#define SIMULATION
+#define SIMULATION                              ///Flag to use the simulation display
 
+#define SCREEN_WIDTH                128         ///Screen width
+#define SCREEN_HEIGHT                44         ///Screen height
 
-#define SCREEN_WIDTH                128
-#define SCREEN_HEIGHT                44
-
-#define N_COLOR_MAPS            12      ///Number of different color maps
+#define N_COLOR_MAPS                 12         ///Number of different color maps
 
 #define BUTTON_STATE_OFF 0
 #define BUTTON_STATE_ON  1
 
-//Colormap to color the tetris stones, TODO: easy same as the colors from stefan's present
-
+//Colormap to color the tetris stones
 const uint32_t aColorMap[N_COLOR_MAPS][8] = {{0x141414, 0xf11c00, 0xe33800, 0xd45500, 0xc67100, 0xb88e00, 0xaaaa00, 0x9bc700},
                                              {0x141414, 0x001cff, 0x0038ff, 0x0055ff, 0x0071ff, 0x008eff, 0x00aaff, 0x00c7ff},
                                              {0x141414, 0xe31cff, 0xc738ff, 0xaa55ff, 0x8e71ff, 0x718eff, 0x55aaff, 0x38c7ff},
@@ -30,9 +28,9 @@ const uint32_t aColorMap[N_COLOR_MAPS][8] = {{0x141414, 0xf11c00, 0xe33800, 0xd4
                                              {0x141414, 0x006eff, 0x00fff8, 0x00ff5b, 0x3bff00, 0xd7ff00, 0xff8f00, 0xff000e},
                                              {0x141414, 0x773012, 0x7c6625, 0x6f8736, 0x4d9743, 0x52a77b, 0x5bb3a9, 0x64a4bf}};
 
-#define N_ROCKS            7      ///Number of different tetris blocks
+#define N_ROCKS            7                            ///Number of different tetris blocks
 
-
+//offset map for the tetris blocks, each block has 4 orientation/rotations
 const int8_t aOffsets[N_ROCKS][4][8] = {{{0,0,-1, 1, 0, 1, 1, 1}, {0,0, 1, 1, 1, 0, 1,-1}, {0,0,-1,-1, 0,-1, 1,-1}, {0,0,-1, 1,-1, 0,-1,-1}},                   //Alpha-Block
                                         {{-1, 0, 0, 0, 1, 0, 2, 0}, {0, -3, 0, -2, 0, -1, 0, 0}, {2, 0, 1, 0, 0, 0, -1, 0}, {0, 0, 0, -1, 0, -2, 0, -3}},       //India
                                         {{1,0,1, 1, 0, 1, 0, 0}, {1, 1, 0, 1, 0, 0, 1, 0}, {0,1,0,0, 1,0, 1,1}, {0,0,1, 0,1, 1,0,1}},                           //Oscar-Block
@@ -41,7 +39,8 @@ const int8_t aOffsets[N_ROCKS][4][8] = {{{0,0,-1, 1, 0, 1, 1, 1}, {0,0, 1, 1, 1,
                                         {{0, 0, 0, 1, 1, 1, 1, 2}, {0, 1, 1, 1, 0, 2, -1, 2}, {1, 2, 1, 1, 0, 1, 0, 0}, {-1, 2, 0, 2, 1, 1, 0, 1}},             //Sierra
                                         {{0, 0, 0, 1, -1, 1, -1, 2}, {0, 1, -1, 1, 0, 2, 1, 2}, {-1, 2, -1, 1, 0, 1, 0, 0}, {1, 2, 0, 2, -1, 1, 0, 1}}};        //Zulu
 
-const uint32_t aScores[] = {0, 40, 100, 300, 1200}; //Original scoring
+
+const uint32_t aScores[] = {0, 40, 100, 300, 1200};     ///Original scoring
 
 // Structure for the input of the game
 typedef struct
@@ -79,21 +78,22 @@ typedef struct
 //structure for a block/rock
 typedef struct
 {
-    int8_t x;
-    int8_t y;
-    uint8_t type;
-    uint8_t rotation;
-    uint8_t rotationGoal;
+    int8_t x;                       ///x-position on the game board
+    int8_t y;                       ///y-position on the game board
+    uint8_t type;                   ///tpe resp. id of the block
+    uint8_t rotation;               ///current rotation
+    uint8_t rotationGoal;           ///target rotation
 } UTIL_TETRIS_Rock_t;
 
+//internal structure keeping the game
 static struct
 {
-    UTIL_TETRIS_Board_t board;
-    UTIL_TETRIS_Rock_t block;
-    UTIL_TETRIS_Rock_t blockNext;
-    int32_t level;
-    uint32_t nLines;
-    uint32_t score;
+    UTIL_TETRIS_Board_t board;      ///the board
+    UTIL_TETRIS_Rock_t block;       ///the current block
+    UTIL_TETRIS_Rock_t blockNext;   ///the future block
+    int32_t level;                  ///level
+    uint32_t nLines;                ///lines
+    uint32_t score;                 ///score
 } m;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -108,9 +108,9 @@ static struct
 //Simulated version of the display
 static struct
 {
-    uint32_t aScreenData[SCREEN_SIZE_IN_BYTES / 4Lu];
-    uint32_t color;
-    uint32_t bkColor;
+    uint32_t aScreenData[SCREEN_SIZE_IN_BYTES / 4Lu];   ///The screen
+    uint32_t color;                                     ///Foreground color
+    uint32_t bkColor;                                   ///Background color
 } mSimulation;
 
 
@@ -144,15 +144,27 @@ uint32_t* getImageBuffer()
 
 #endif
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//static functions
+/////////////////////////////////////////////////////////////////////////////////////////////////
+static void getNextBlock(UTIL_TETRIS_Rock_t* const pRock);
+static uint16_t randomgen();
+static void placeBlockOnBoard(const UTIL_TETRIS_Rock_t* const pRock,
+                              UTIL_TETRIS_Board_t* const pBoard,
+                              const uint8_t blockId);
+
 static uint16_t lfsr = 0xACE1u;
-extern uint16_t randomgen()
+static uint16_t randomgen()
 {
     uint16_t bit  = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5) ) & 1;
     return lfsr =  (lfsr >> 1) | (bit << 15);
 }
 
-//TODO: random selection of block type
-static void getNextBlock(UTIL_TETRIS_Rock_t* pRock)
+/**
+ * \brief get the next block
+ * \param[out] pRock: the next randomly selected block
+ */
+static void getNextBlock(UTIL_TETRIS_Rock_t* const pRock)
 {
     pRock->rotation = 0;
     pRock->rotationGoal = 0;
@@ -165,8 +177,55 @@ static void getNextBlock(UTIL_TETRIS_Rock_t* pRock)
 #define DIRECTION_UP   1
 #define DIRECTION_DOWN 2
 
-static bool moveBlock(UTIL_TETRIS_Rock_t* pRock,
-                      UTIL_TETRIS_Board_t* pBoard,
+/**
+ * \brief Places a Rock on the Board.
+ * \note  blockId=0=> erases the block
+ * \param[in] pRock: the tetris block to be placed
+ * \param[out] pBoard: the game board
+ */
+inline
+static void placeBlockOnBoard(const UTIL_TETRIS_Rock_t* const pRock,
+                              UTIL_TETRIS_Board_t* const pBoard,
+                              const uint8_t blockId)
+{
+    for(uint32_t i=0Lu;i<4;i++)
+    {
+        int8_t xTemp = pRock->x + aOffsets[pRock->type][pRock->rotation][i*2+0];
+        int8_t yTemp = pRock->y + aOffsets[pRock->type][pRock->rotation][i*2+1];
+        pBoard->aData[yTemp*BOARD_WIDTH+xTemp] = blockId;
+    }
+}
+
+/**
+ * \brief CHeck if a block can be placed
+ */
+inline
+static bool blockCanBePlaced(int8_t offsetX,
+                             int8_t offsetY,
+                             const UTIL_TETRIS_Rock_t* const pRock,
+                             UTIL_TETRIS_Board_t* const pBoard)
+{
+    for(uint32_t i=0Lu;i<4;i++)
+    {
+        int8_t xTemp = pRock->x + aOffsets[pRock->type][pRock->rotation][i*2+0] + offsetX;
+        int8_t yTemp = pRock->y + aOffsets[pRock->type][pRock->rotation][i*2+1] + offsetY;
+        if(xTemp>=0 && xTemp<BOARD_WIDTH && yTemp>=0 && yTemp<BOARD_HEIGHT)
+        {
+            if(pBoard->aData[yTemp*BOARD_WIDTH+xTemp] > 0)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool moveBlock(UTIL_TETRIS_Rock_t* const pRock,
+                      UTIL_TETRIS_Board_t* const pBoard,
                       const uint8_t direction)
 {
     //1. Configure the delta
@@ -184,46 +243,17 @@ static bool moveBlock(UTIL_TETRIS_Rock_t* pRock,
     {
         deltaY = 1;
     }
-    //2. remove stone
-    for(uint32_t i=0Lu;i<4;i++)
-    {
-        int8_t xTemp = pRock->x + aOffsets[pRock->type][pRock->rotation][i*2+0];
-        int8_t yTemp = pRock->y + aOffsets[pRock->type][pRock->rotation][i*2+1];
-        pBoard->aData[yTemp*BOARD_WIDTH+xTemp] = 0;
-    }
+    //2. remove stone0
+    placeBlockOnBoard(pRock, pBoard, 0);
     //3. check if it can be placed
-    bool ok = true;
-    for(uint32_t i=0Lu;i<4;i++)
-    {
-        int8_t xTemp = pRock->x + aOffsets[pRock->type][pRock->rotation][i*2+0] + deltaX;
-        int8_t yTemp = pRock->y + aOffsets[pRock->type][pRock->rotation][i*2+1] + deltaY;
-        if(xTemp>=0 && xTemp<BOARD_WIDTH && yTemp>=0 && yTemp<BOARD_HEIGHT)
-        {
-            if(pBoard->aData[yTemp*BOARD_WIDTH+xTemp] > 0)
-            {
-                ok = false;
-                break;
-            }
-        }
-        else
-        {
-            ok = false;
-            break;
-        }
-    }
-    //If ok: remove block
+    bool ok = blockCanBePlaced(deltaX, deltaY, pRock, pBoard);
     if(ok)
     {
         pRock->x += deltaX;
         pRock->y += deltaY;
     }
-    //Place block
-    for(uint32_t i=0Lu;i<4;i++)
-    {
-        int8_t xTemp = pRock->x + aOffsets[pRock->type][pRock->rotation][i*2+0];
-        int8_t yTemp = pRock->y + aOffsets[pRock->type][pRock->rotation][i*2+1];
-        pBoard->aData[yTemp*BOARD_WIDTH+xTemp] = pRock->type + 1;
-    }
+    //4. Place block
+    placeBlockOnBoard(pRock, pBoard, pRock->type+1);
     return ok;
 }
 
@@ -252,12 +282,7 @@ static bool placeBlock(UTIL_TETRIS_Rock_t* pRock,
     if(ok)
     {
         //Place block
-        for(uint32_t i=0Lu;i<4;i++)
-        {
-            int8_t xTemp = pRock->x + aOffsets[pRock->type][pRock->rotation][i*2+0];
-            int8_t yTemp = pRock->y + aOffsets[pRock->type][pRock->rotation][i*2+1];
-            pBoard->aData[yTemp*BOARD_WIDTH+xTemp] = pRock->type + 1;
-        }
+        placeBlockOnBoard(pRock, pBoard, pRock->type + 1);
     }
     return ok;
 }
@@ -268,12 +293,7 @@ static bool rotateBlock(UTIL_TETRIS_Rock_t* pRock,
     pRock->rotationGoal++;
     pRock->rotationGoal%=4;
     //1. remove
-    for(uint32_t i=0Lu;i<4;i++)
-    {
-        int8_t xTemp = pRock->x + aOffsets[pRock->type][pRock->rotation][i*2+0];
-        int8_t yTemp = pRock->y + aOffsets[pRock->type][pRock->rotation][i*2+1];
-        pBoard->aData[yTemp*BOARD_WIDTH+xTemp] = 0;
-    }
+    placeBlockOnBoard(pRock, pBoard, 0);
     //Temp move
     bool ok = true;
     for(uint32_t i=0Lu;i<4;i++)
@@ -300,13 +320,7 @@ static bool rotateBlock(UTIL_TETRIS_Rock_t* pRock,
         pRock->rotation = pRock->rotationGoal;
     }
     //Place block
-    for(uint32_t i=0Lu;i<4;i++)
-    {
-        int8_t xTemp = pRock->x + aOffsets[pRock->type][pRock->rotation][i*2+0];
-        int8_t yTemp = pRock->y + aOffsets[pRock->type][pRock->rotation][i*2+1];
-        pBoard->aData[yTemp*BOARD_WIDTH+xTemp] = pRock->type + 1;
-    }
-
+    placeBlockOnBoard(pRock, pBoard, pRock->type+1);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -327,23 +341,16 @@ static void draw4by4(int x, int y)
 {
     GUI_DrawPixel(x  , y);
     GUI_DrawPixel(x+1, y);
-    GUI_DrawPixel(x  , y+1);
-    GUI_DrawPixel(x+1, y+1);
+    GUI_DrawPixel(x+2, y);
 
     GUI_DrawPixel(x  , y+1);
     GUI_DrawPixel(x+1, y+1);
+    GUI_DrawPixel(x+2, y+1);
+
     GUI_DrawPixel(x  , y+2);
     GUI_DrawPixel(x+1, y+2);
-
-    GUI_DrawPixel(x+1  , y);
-    GUI_DrawPixel(x+2, y);
-    GUI_DrawPixel(x+1  , y+1);
-    GUI_DrawPixel(x+2, y+1);
-
-    GUI_DrawPixel(x+1  , y+1);
-    GUI_DrawPixel(x+2, y+1);
-    GUI_DrawPixel(x+1  , y+2);
     GUI_DrawPixel(x+2, y+2);
+
 }
 
 static void draw3by3(int x, int y)
@@ -352,18 +359,6 @@ static void draw3by3(int x, int y)
     GUI_DrawPixel(x+1, y);
     GUI_DrawPixel(x  , y+1);
     GUI_DrawPixel(x+1, y+1);
-
-//    GUI_DrawPixel(x  , y);
-//    GUI_DrawPixel(x+1, y);
-//    GUI_DrawPixel(x+2, y);
-//
-//    GUI_DrawPixel(x  , y+1);
-//    GUI_DrawPixel(x+1, y+1);
-//    GUI_DrawPixel(x+2, y+1);
-//
-//    GUI_DrawPixel(x  , y+2);
-//    GUI_DrawPixel(x+1, y+2);
-//    GUI_DrawPixel(x+2, y+2);
 }
 const uint8_t aNumbers[10][5] = {{0b11111000, 0b10011000, 0b10101000, 0b11001000, 0b11111000},    //0
                                  {0b00100000, 0b01100000, 0b00100000, 0b00100000, 0b01110000},    //1
