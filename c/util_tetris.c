@@ -360,6 +360,7 @@ static void draw3by3(int x, int y)
     GUI_DrawPixel(x  , y+1);
     GUI_DrawPixel(x+1, y+1);
 }
+#define WIDTH_OF_FONT 5
 const uint8_t aNumbers[10][5] = {{0b11111000, 0b10011000, 0b10101000, 0b11001000, 0b11111000},    //0
                                  {0b00100000, 0b01100000, 0b00100000, 0b00100000, 0b01110000},    //1
                                  {0b11110000, 0b00001000, 0b01110000, 0b10000000, 0b11111000},    //2
@@ -395,13 +396,20 @@ static void printSingleNumberAt(int x, int y, uint32_t number)
     }
 }
 
-static void printNumberAt(int x, int y, uint32_t number)
+/**
+ * Print a number with a ceratin amount of digits
+ */
+inline
+static void printNumberAt(const int x,
+                          const int y,
+                          const uint32_t number,
+                          const uint32_t nDigits)
 {
     uint32_t n=number;
-    for(uint32_t i=0Lu;i<7;i++)
+    for(uint32_t i=0Lu;i<nDigits;i++)
     {
         uint32_t remainder = n % 10;
-        printSingleNumberAt(x+(6-i)*6, y, remainder);
+        printSingleNumberAt(x+(nDigits-1-i)*(WIDTH_OF_FONT+1), y, remainder);
         n = n / 10;
         if(n==0)
         {
@@ -409,6 +417,7 @@ static void printNumberAt(int x, int y, uint32_t number)
         }
     }
 }
+
 static void showBoard(UTIL_TETRIS_Board_t* pBoard, uint32_t level)
 {
     for(uint32_t y=0;y<BOARD_HEIGHT;y++)
@@ -509,7 +518,7 @@ extern void UTIL_TETRIS_init(const uint16_t seed)
     m.score = 0;
     showBoard(&m.board, m.level);
     showPreview(&m.blockNext, m.level);
-    printNumberAt(85, 35, m.score);
+    printNumberAt(85, 35, m.score, 7);
 }
 #define LINES_PER_LEVEL 2
 
@@ -545,7 +554,7 @@ extern uint32_t UTIL_TETRIS_update(const UTIL_TETRIS_Input_t* const pButtons,
             uint32_t nLines = evaluateBoard(&m.board);
             m.nLines += nLines;
             m.score += aScores[nLines]*(m.level+1);
-            printNumberAt(85, 35, m.score);
+            printNumberAt(85, 35, m.score, 7);
             pOutput->score = m.score;
             if(m.nLines>(m.level+1)*LINES_PER_LEVEL)
             {
