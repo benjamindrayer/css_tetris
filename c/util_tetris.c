@@ -85,6 +85,14 @@ typedef struct
     uint8_t rotationGoal;           ///target rotation
 } UTIL_TETRIS_Rock_t;
 
+typedef struct
+{
+    uint32_t nBlinks;               ///blinks to be executed
+    uint32_t nextHighTime;          ///Time to turn on the LED
+    uint32_t nextLowTime;           ///Time to turn off the LED
+    uint8_t state;                  ///high or low state of the led
+} UTIL_TETRIS_Led_t;
+
 //internal structure keeping the game
 static struct
 {
@@ -94,6 +102,7 @@ static struct
     int32_t level;                  ///level
     uint32_t nLines;                ///lines
     uint32_t score;                 ///score
+    UTIL_TETRIS_Led_t blinker;      ///LED handler
 } m;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -111,6 +120,7 @@ static struct
     uint32_t aScreenData[SCREEN_SIZE_IN_BYTES / 4Lu];   ///The screen
     uint32_t color;                                     ///Foreground color
     uint32_t bkColor;                                   ///Background color
+    bool qLedState;                                     ///State of the Q-LED
 } mSimulation;
 
 
@@ -142,6 +152,19 @@ uint32_t* getImageBuffer()
     return &mSimulation.aScreenData[0];
 }
 
+/**
+ * \brief Set the LED directly
+ */
+extern void LUI_setQLEDDirect(const bool state)
+{
+    mSimulation.qLedState = state;
+}
+
+extern bool UTIL_TETRIS_qetLedState()
+{
+    return mSimulation.qLedState;
+}
+
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -153,6 +176,57 @@ static void placeBlockOnBoard(const UTIL_TETRIS_Rock_t* const pRock,
                               UTIL_TETRIS_Board_t* const pBoard,
                               const uint8_t blockId);
 
+#define BLINK_DELAY 4
+static void addBlinks(UTIL_TETRIS_Led_t* const pLed,
+                      const uint32_t counter,
+                      const uint32_t nBlinks)
+{
+    if(pLed->nBlinks == 0 && counter>pLed->nextLowTime)
+    {
+        pLed->nextHighTime=counter;
+        pLed->nextLowTime=counter+BLINK_DELAY;
+        pLed->state = 1;
+        LUI_setQLEDDirect(true);
+        pLed->nBlinks += (nBlinks - 1);
+    }
+    else
+    {
+        pLed->nBlinks += nBlinks;
+    }
+}
+
+static void updateBlink(UTIL_TETRIS_Led_t* const pLed,
+                        const uint32_t counter)
+{
+    if(pLed->state==1)
+    {
+        if(counter>pLed->nextLowTime)
+        {
+            //Turn off
+            pLed->state = 0;
+            LUI_setQLEDDirect(false);
+            if(pLed->nBlinks>0)
+            {
+                pLed->nBlinks--;
+                pLed->nextHighTime = counter + BLINK_DELAY;
+                pLed->nextLowTime = counter + (2*BLINK_DELAY);
+            }
+            else
+            {
+                pLed->nextHighTime = (uint32_t) (-1);
+            }
+        }
+    }
+    if(pLed->state==0)
+    {
+        if(counter>pLed->nextHighTime)
+        {
+            //turn on
+            pLed->state = 1;
+            LUI_setQLEDDirect(true);
+        }
+    }
+}
 static uint16_t lfsr = 0xACE1u;
 static uint16_t randomgen()
 {
@@ -516,6 +590,10 @@ extern void UTIL_TETRIS_init(const uint16_t seed)
     m.level = 0;
     m.nLines = 0;
     m.score = 0;
+    m.blinker.nBlinks=0;
+    m.blinker.state=0;
+    m.blinker.nextLowTime = 0;
+    m.blinker.nextHighTime = 0;
     showBoard(&m.board, m.level);
     showPreview(&m.blockNext, m.level);
     printNumberAt(85, 35, m.score, 7);
@@ -527,6 +605,7 @@ extern uint32_t UTIL_TETRIS_update(const UTIL_TETRIS_Input_t* const pButtons,
 {
     counter++;
     showBoard(&m.board, m.level);
+    updateBlink(&m.blinker, counter);
     if(pButtons->buttonLeft==1)
     {
         moveBlock(&m.block, &m.board, DIRECTION_UP);
@@ -552,6 +631,10 @@ extern uint32_t UTIL_TETRIS_update(const UTIL_TETRIS_Input_t* const pButtons,
         {
             //1. Check line completeness and do stuff
             uint32_t nLines = evaluateBoard(&m.board);
+            if(nLines>0)
+            {
+                addBlinks(&m.blinker, counter, nLines);
+            }
             m.nLines += nLines;
             m.score += aScores[nLines]*(m.level+1);
             printNumberAt(85, 35, m.score, 7);

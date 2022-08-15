@@ -91,4 +91,12 @@ class Display:
                 self.image[x,y,0] = image.get_at((x,y)).r
                 self.image[x,y,1] = image.get_at((x,y)).g
                 self.image[x,y,2] = image.get_at((x,y)).b
-#        pygame.display.update()
+
+
+    def showImageMasked(self, image, mask):
+        for x in range(mask[0], mask[1]):
+            for y in range(mask[2], mask[3]):
+                self.image[x,y,0] = image.get_at((x,y)).r
+                self.image[x,y,1] = image.get_at((x,y)).g
+                self.image[x,y,2] = image.get_at((x,y)).b
+        self.show(mask=mask)

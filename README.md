@@ -7,3 +7,9 @@ Use 32-bit python
 
 ##Software TODOs:
 - Elements
+- Clean up code
+- Color change simulation, depending on what the sensor sees
+- LED simuluation
+- Save high score ?
+
+- Sound ?
