@@ -42,6 +42,10 @@ const int8_t aOffsets[N_ROCKS][4][8] = {{{0,0,-1, 1, 0, 1, 1, 1}, {0,0, 1, 1, 1,
 
 const uint32_t aScores[] = {0, 40, 100, 300, 1200};     ///Original scoring
 
+//The start screent in RLE encoding
+#define SIZE_START_SCREEN 803                           ///Size of the RLE encoded start screen
+const uint8_t aStartScreen[SIZE_START_SCREEN] = {44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 1, 38, 5, 0, 36, 1, 3, 4, 0, 2, 3, 1, 3, 1, 3, 2, 3, 1, 3, 1, 3, 1, 3, 2, 3, 1, 3, 1, 4, 0, 2, 3, 2, 2, 2, 2, 2, 3, 1, 3, 2, 2, 2, 2, 2, 2, 3, 2, 2, 3, 1, 40, 3, 0, 3, 3, 1, 3, 1, 3, 2, 3, 1, 3, 1, 3, 1, 3, 2, 3, 1, 3, 1, 3, 0, 3, 3, 2, 2, 2, 2, 2, 3, 1, 3, 2, 2, 2, 3, 1, 3, 1, 3, 2, 2, 0, 1, 1, 40, 2, 0, 4, 3, 14, 3, 14, 3, 1, 2, 0, 4, 3, 14, 3, 14, 3, 2, 1, 1, 1, 1, 16, 1, 23, 1, 1, 4, 3, 1, 9, 4, 3, 1, 9, 4, 3, 1, 1, 2, 3, 3, 1, 10, 3, 3, 1, 10, 3, 3, 2, 2, 42, 4, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 1, 3, 2, 3, 1, 3, 1, 3, 1, 3, 2, 3, 1, 3, 1, 3, 1, 3, 41, 4, 40, 4, 7, 3, 2, 3, 1, 3, 5, 3, 2, 3, 1, 3, 4, 4, 8, 2, 2, 3, 1, 3, 6, 2, 2, 3, 2, 2, 4, 5, 5, 1, 16, 1, 15, 1, 9, 15, 2, 15, 3, 9, 15, 2, 15, 3, 10, 13, 4, 14, 3, 44, 0, 35, 9, 0, 1, 3, 1, 3, 2, 3, 1, 3, 1, 3, 2, 3, 1, 3, 1, 3, 2, 8, 0, 2, 2, 2, 3, 1, 3, 2, 2, 2, 3, 1, 3, 2, 2, 2, 3, 1, 8, 0, 41, 3, 0, 2, 3, 1, 3, 2, 3, 1, 3, 2, 2, 2, 3, 1, 3, 1, 3, 2, 3, 1, 3, 0, 2, 3, 2, 3, 1, 3, 1, 3, 2, 3, 1, 3, 1, 3, 2, 3, 1, 3, 2, 2, 0, 42, 2, 0, 38, 3, 1, 2, 0, 38, 3, 1, 2, 0, 36, 1, 6, 1, 35, 8, 1, 36, 3, 3, 1, 1, 36, 4, 2, 2, 4, 40, 3, 2, 3, 2, 3, 1, 3, 1, 3, 2, 3, 1, 3, 1, 3, 2, 3, 1, 3, 1, 3, 3, 3, 1, 3, 1, 3, 2, 3, 1, 3, 2, 2, 2, 3, 1, 3, 2, 2, 1, 3, 1, 1, 39, 3, 3, 3, 2, 3, 1, 3, 1, 3, 2, 3, 1, 3, 1, 3, 2, 3, 4, 3, 4, 3, 1, 3, 2, 2, 2, 3, 1, 3, 2, 2, 2, 3, 1, 3, 4, 4, 1, 1, 38, 4, 38, 2, 4, 37, 3, 5, 36, 3, 44, 14, 5, 25, 13, 2, 3, 2, 24, 13, 3, 3, 1, 24, 13, 1, 1, 5, 24, 12, 2, 1, 5, 24, 12, 8, 24, 11, 2, 1, 5, 25, 7, 6, 1, 5, 14, 10, 1, 7, 2, 3, 7, 14, 2, 3, 1, 3, 1, 1, 6, 4, 2, 6, 14, 3, 3, 2, 2, 2, 2, 5, 1, 25, 1, 10, 1, 2, 3, 12, 1, 2, 3, 1, 3, 1, 3, 12, 1, 3, 3, 10, 3, 1, 3, 1, 3, 2, 3, 10, 1, 1, 1, 1, 40, 1, 0, 43, 1, 0, 42, 2, 0, 1, 1, 40, 2, 0, 42, 2, 0, 41, 3, 1, 40, 3, 2, 38, 4, 29, 11, 4, 30, 10, 4, 11, 3, 1, 3, 14, 3, 2, 1, 1, 1, 4, 9, 10, 12, 10, 3, 9, 2, 3, 1, 3, 2, 11, 2, 3, 1, 3, 1, 3, 8, 4, 2, 2, 3, 1, 10, 3, 3, 1, 3, 2, 2, 4, 16, 10, 1, 1, 12, 4, 2, 3, 11, 10, 12, 1, 1, 3, 3, 3, 11, 9, 12, 2, 1, 3, 1, 1, 14, 1, 6, 3, 1, 1, 13, 3, 16, 1, 2, 3, 1, 3, 15, 2, 16, 2, 2, 3, 1, 3, 15, 2, 1, 1, 14, 1, 1, 1, 5, 4, 14, 2, 7, 10, 7, 10, 8, 1, 8, 10, 7, 10, 7, 1, 1, 1, 1, 16, 1, 23, 1, 0, 2, 1, 8, 1, 7, 1, 23, 1, 0, 8, 2, 1, 3, 2, 2, 7, 2, 1, 3, 2, 3, 6, 2, 0, 8, 2, 2, 2, 2, 3, 6, 2, 2, 2, 2, 3, 6, 2, 0, 1, 1, 40, 2, 0, 41, 3, 0, 41, 3, 1, 40, 3, 3, 16, 1, 16, 8, 4, 14, 3, 15, 8, 4, 14, 3, 14, 9, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44};
+
 // Structure for the input of the game
 typedef struct
 {
@@ -576,6 +580,62 @@ static uint32_t evaluateBoard(UTIL_TETRIS_Board_t* pBoard)
     return nLines;
 }
 
+/**
+ * \brief shows the BU13 start screen
+ *
+ */
+extern void UTIL_TETRIS_showStartScreen()
+{
+
+    float alpha = 1.f;
+    float beta = 0.f;
+
+    const float red0 = 255.f;
+    const float green0 = 255.f;
+    const float blue0 = 0.f;
+
+    const float red1 = 0.f;
+    const float green1 = 255.f;
+    const float blue1 = 255.f;
+
+    uint32_t currentColor = 0x00FFFF;
+    uint32_t xCurrent = 0Lu;
+    uint32_t yCurrent = 0Lu;
+    uint8_t foreground = 0u;
+
+    //Loop over the RLE encoded start screen
+    for(uint32_t index=0Lu;index<SIZE_START_SCREEN;index++)
+    {
+        if(foreground == 0u)
+        {
+            GUI_SetColor(0x00000000);
+        }
+        else
+        {
+            GUI_SetColor(currentColor);
+        }
+        for(uint32_t i=0Lu; i<aStartScreen[index]; i++)
+        {
+            //Color with background color
+            GUI_DrawPixel(xCurrent, yCurrent);
+            yCurrent++;
+        }
+        foreground = 1u-foreground;
+        if(yCurrent>=SCREEN_HEIGHT)
+        {
+            yCurrent = 0Lu;
+            xCurrent++;
+            foreground=0u;
+            beta = (float)xCurrent/((float)SCREEN_WIDTH);
+            alpha = 1.f-beta;
+            uint8_t red = (uint8_t)((red0*alpha) + (red1*beta));
+            uint8_t green = (uint8_t)((green0*alpha) + (green1*beta));
+            uint8_t blue = (uint8_t)((blue0*alpha) + (blue1*beta));
+            currentColor = blue<<16 | green<<8 | red;
+        }
+    }
+}
+
 static uint32_t counter = 0;
 
 /**
@@ -584,6 +644,8 @@ static uint32_t counter = 0;
  */
 extern void UTIL_TETRIS_init(const uint16_t seed)
 {
+    GUI_SetBkColor(0x00000000u);
+    GUI_Clear();
     lfsr = seed;
     //Init Game board
     initBoard(&m.board);
