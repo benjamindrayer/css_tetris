@@ -57,6 +57,40 @@ def decode_rle(RLE, x_dim, y_dim):
             fg = 0
     return image
 
+def encode_bitmap(rgb_im):
+    """
+
+    :param rgb_im:
+    :return:
+    """
+    bitmap = []
+    print("W,H", rgb_im.width, rgb_im.height)
+    for y in range(rgb_im.height):
+        value = 0
+        counter = 0
+        for x in range(rgb_im.width):
+            r, g, b = rgb_im.getpixel((x, y))
+            if r > 0:
+                value += 2**counter
+            counter = counter + 1
+            if counter == 32:
+                bitmap.append(value)
+                counter = 0
+                value = 0
+    return bitmap
+
+def decode_bitmap(bitmap, x_dim, y_dim):
+    image = np.zeros((y_dim, x_dim, 3))
+    for y in range(y_dim):
+        for x in range(x_dim):
+            elem = bitmap[y * int(x_dim/32) + int(x/32)]
+            index = x % 32
+            data = elem & 2**index
+#            print(x, y, y * int(x_dim/32) + int(x/32), index, data)
+            if data > 0:
+                image[y, x, 0] = 1
+    return image
+
 #def compress_list(input):
 
 #1. Read image
@@ -70,5 +104,11 @@ print(len(RLE), RLE)
 
 #3. decode rgb
 image_decoded = decode_rle(RLE, rgb_im.width, rgb_im.height)
-plt.imshow(image_decoded)
+
+#4. bitmap
+bitmap = encode_bitmap(rgb_im)
+print(len(bitmap), bitmap)
+
+im2 = decode_bitmap(bitmap, rgb_im.width, rgb_im.height)
+plt.imshow(im2)
 plt.show()
