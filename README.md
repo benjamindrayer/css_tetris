@@ -8,7 +8,6 @@
   $$    $$/ $$    $$/ $$    $$/          $$ |   $$       |   $$ |   $$ |  $$ |/ $$   |$$    $$/ 
    $$$$$$/   $$$$$$/   $$$$$$/           $$/    $$$$$$$$/    $$/    $$/   $$/ $$$$$$/  $$$$$$/  
  </pre>
-# css_tetris
 ## Getting started
 1. Build the dll
 Use cmake to configure the project, select the mingw 32-bit compiler
