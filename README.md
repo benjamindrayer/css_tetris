@@ -21,6 +21,9 @@ Use 32-bit python
 ### Circuit
 - TODO 
 
+### Case
+The case is based on the model https://www.myminifactory.com/object/3d-print-tetris-i-box-83457. TODO: Get out model once it is ready.
+
 ## Software TODOs:
 - Elements
 - Clean up code
