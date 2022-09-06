@@ -40,7 +40,7 @@ The case is based on the model https://www.myminifactory.com/object/3d-print-tet
 - LED simuluation
 - Save high score ?
 
-- Sound ?
-
-https://github.com/robsoncouto/arduino-songs/blob/master/tetris/tetris.ino
-
+### Sound 
+- Soundtrack from https://github.com/robsoncouto/arduino-songs/blob/master/tetris/tetris.ino
+- tone function with pwm has to be implemented
+- effects such as rotation/landing/line clearing would be nice (low prio)
