@@ -433,15 +433,30 @@ const int composition_nokia[] PROGMEM = {
 const int tempo_nokia = 180;
 
 const int composition_sweet[] PROGMEM = {
+  NOTE_CS4, 5, NOTE_CS5, 4, NOTE_GS4, 4, NOTE_FS4, 4, NOTE_FS5, 4, NOTE_GS4, 4, NOTE_F5, 4, NOTE_GS4, 4,
+  NOTE_CS4, 5, NOTE_CS5, 4, NOTE_GS4, 4, NOTE_FS4, 4, NOTE_FS5, 4, NOTE_GS4, 4, NOTE_F5, 4, NOTE_GS4, 4,
 
-  // Nokia Ringtone 
-  // Score available at https://musescore.com/user/29944637/scores/5266155
+  NOTE_DS4, 5, NOTE_CS5, 4, NOTE_GS4, 4, NOTE_FS4, 4, NOTE_FS5, 4, NOTE_GS4, 4, NOTE_F5, 4, NOTE_GS4, 4,
+  NOTE_DS4, 5, NOTE_CS5, 4, NOTE_GS4, 4, NOTE_FS4, 4, NOTE_FS5, 4, NOTE_GS4, 4, NOTE_F5, 4, NOTE_GS4, 4,
+
+  NOTE_FS4, 5, NOTE_CS5, 4, NOTE_GS4, 4, NOTE_FS4, 4, NOTE_FS5, 4, NOTE_GS4, 4, NOTE_F5, 4, NOTE_GS4, 4,
+  NOTE_FS4, 5, NOTE_CS5, 4, NOTE_GS4, 4, NOTE_FS4, 4, NOTE_FS5, 4, NOTE_GS4, 4, NOTE_F5, 4, NOTE_GS4, 4};
+/*
+const int composition_sweet[] PROGMEM = {
+
+  // Sweet Child of Mine
   
-  NOTE_D5, 8, NOTE_CS5, 8, NOTE_GS5, 8, NOTE_FS5, 8,
-  NOTE_FS6,8, NOTE_GS5, 8, NOTE_F5, 8, NOTE_GS5, 8,
-
+  NOTE_D5, 8, NOTE_CS5, 8, NOTE_GS5, 8, NOTE_FS5, 8, NOTE_FS6,8, NOTE_GS5, 8, NOTE_F5, 8, NOTE_GS5, 8,  //1
+  NOTE_D5, 8, NOTE_CS5, 8, NOTE_GS5, 8, NOTE_FS5, 8, NOTE_FS6,8, NOTE_GS5, 8, NOTE_F5, 8, NOTE_GS5, 8,  //2
+  NOTE_E5, 8, NOTE_CS5, 8, NOTE_GS5, 8, NOTE_FS5, 8, NOTE_FS6,8, NOTE_GS5, 8, NOTE_F5, 8, NOTE_GS5, 8,  //3
+  NOTE_E5, 8, NOTE_CS5, 8, NOTE_GS5, 8, NOTE_FS5, 8, NOTE_FS6,8, NOTE_GS5, 8, NOTE_F5, 8, NOTE_GS5, 8,  //4
+  NOTE_FS5,8, NOTE_CS5, 8, NOTE_GS5, 8, NOTE_FS5, 8, NOTE_FS6,8, NOTE_GS5, 8, NOTE_F5, 8, NOTE_GS5, 8,  //5
+  NOTE_FS5,8, NOTE_CS5, 8, NOTE_GS5, 8, NOTE_FS5, 8, NOTE_FS6,8, NOTE_GS5, 8, NOTE_F5, 8, NOTE_GS5, 8,  //6
+  NOTE_GS5, 1, //x
+  NOTE_FS6, 5, NOTE_AS6, 8, NOTE_DS5, 8, NOTE_DS5, 4, NOTE_CS5, 8, NOTE_FS6, 8,
 };
-const int tempo_sweet = 140;
+*/
+const int tempo_sweet = 300;
 
 void play_composition(const int16_t* const pComposition, 
                       const uint32_t lenComposition, 
