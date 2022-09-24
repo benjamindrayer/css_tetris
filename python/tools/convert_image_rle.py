@@ -65,11 +65,38 @@ def encode_bitmap(rgb_im):
     """
     bitmap = []
     print("W,H", rgb_im.width, rgb_im.height)
-    for y in range(rgb_im.height):
+    width = 128
+    height = 44
+    for y in range(height):
         value = 0
         counter = 0
-        for x in range(rgb_im.width):
+        for x in range(width):
             r, g, b = rgb_im.getpixel((x, y))
+            if r > 0:
+                value += 2**counter
+            counter = counter + 1
+            if counter == 32:
+                bitmap.append(value)
+                counter = 0
+                value = 0
+    return bitmap
+
+def encode_bitmap_2bit(rgb_im):
+    """
+
+    :param rgb_im:
+    :return:
+    """
+    bitmap = []
+    print("W,H", rgb_im.width, rgb_im.height)
+    width = 128
+    height = 44
+    for y in range(height):
+        value = 0
+        counter = 0
+        for x in range(width):
+            r, g, b = rgb_im.getpixel((x, y))
+            print(r, g, b)
             if r > 0:
                 value += 2**counter
             counter = counter + 1
@@ -81,6 +108,7 @@ def encode_bitmap(rgb_im):
 
 def decode_bitmap(bitmap, x_dim, y_dim):
     image = np.zeros((y_dim, x_dim, 3))
+    print(y_dim, x_dim)
     for y in range(y_dim):
         for x in range(x_dim):
             elem = bitmap[y * int(x_dim/32) + int(x/32)]
@@ -95,20 +123,15 @@ def decode_bitmap(bitmap, x_dim, y_dim):
 
 #1. Read image
 IMAGE_NAME = "../images/logo.png"
+IMAGE_NAME = "../images/game_over_2bit.png"
 im = Image.open(IMAGE_NAME)
 rgb_im = im.convert('RGB')
 
-#2. encode
-RLE = encode_rle(rgb_im)
-print(len(RLE), RLE)
-
-#3. decode rgb
-image_decoded = decode_rle(RLE, rgb_im.width, rgb_im.height)
 
 #4. bitmap
-bitmap = encode_bitmap(rgb_im)
+bitmap = encode_bitmap_2bit(rgb_im)
 print(len(bitmap), bitmap)
 
-im2 = decode_bitmap(bitmap, rgb_im.width, rgb_im.height)
+im2 = decode_bitmap(bitmap, 128, 44)
 plt.imshow(im2)
 plt.show()
