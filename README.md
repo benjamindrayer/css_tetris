@@ -28,7 +28,7 @@ Use 32-bit python
 - Cables
 
 ### Circuit
-- TODO 
+![Circuit](schematic/schematic.png)
 
 ### Case
 The case is based on the model https://www.myminifactory.com/object/3d-print-tetris-i-box-83457. TODO: Get out model once it is ready.
